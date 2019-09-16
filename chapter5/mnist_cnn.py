@@ -2,9 +2,10 @@ from __future__ import print_function
 import keras
 from keras.datasets import mnist
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Dense, Dropout, Flatten, Input, add
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
+from keras.models import Model
 
 
 #1. load mnist data
@@ -40,17 +41,20 @@ def load_data(num_classes):
 
 #2. make DL model
 def build_model(input_shape, num_classes):
-    model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))  # Input Layer : 32개의 필터를 가진다.
+    input_layer = Input(shape=(input_shape))
 
-    model.add(Conv2D(64, (3, 3), activation='relu'))  # 첫번째 hidden layer이며 64개의 필터를 가진다.
-    model.add(MaxPooling2D(pool_size=(2, 2)))  # Pooling Layer를 의미한다.
-    model.add(Dropout(0.25))  # Dropout을 0.25로 하여 overfitting을 방지한다.
-    model.add(Flatten())  # 데이터를 1차원으로 바꿔주는 Layer. 아래의 fully_connected_layer에 연결해주기 위해 1차원으로 바꾸어준다.
-    model.add(Dense(128, activation='relu'))  # Dense는 Fully Connected Layer를 의미한다.
-    model.add(Dropout(0.5))  # Dropout은 0.5로 하여 overfitting을 방지한다.
+    conv_layer1 = Conv2D(32, kernel_size=(3, 3), activation='relu')(input_layer)
+    conv_layer2 = Conv2D(64, (3, 3), activation='relu')(conv_layer1)
+    pooling_layer = MaxPooling2D(pool_size=(2, 2))(conv_layer2)
+    dropout_layer = Dropout(0.25)(pooling_layer)
 
-    model.add(Dense(num_classes, activation='softmax'))  # Output Layer를 의미하며 activation은 softmax로 분류흘 한다.
+    flatten_layer = Flatten()(dropout_layer)
+    dense_laeyr = Dense(128, activation='relu')(flatten_layer)
+
+    output_layer = Dense(num_classes, activation='softmax')(dense_laeyr)
+
+    model = Model(inputs=input_layer, outputs=output_layer)
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     model.summary()  # 모델의 요약을 보여준다.
 
@@ -65,19 +69,9 @@ def main():
 
     x_train, x_test, y_train, y_test, input_shape = load_data(num_classes)
     model = build_model(input_shape, num_classes)
-
-    model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer=keras.optimizers.Adadelta(),
-                  metrics=['accuracy'])
-
-    model.fit(x_train, y_train,
-              batch_size=batch_size,
-              epochs=epochs,
-              verbose=1,
-              validation_data=(x_test, y_test))
+    model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, validation_data=(x_test, y_test))
 
     score = model.evaluate(x_test, y_test, verbose=0)
-
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 
