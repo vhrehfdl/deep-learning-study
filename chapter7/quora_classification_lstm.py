@@ -63,7 +63,7 @@ def data_preprocissing(train_x, test_x, val_x):
     return train_x, test_x, val_x, tokenizer
 
 
-def build_model_rnn(size):
+def build_model_lstm(size):
     input_layer = Input(shape=(size,))
 
     embedding_layer = Embedding(10000, 300)(input_layer)
@@ -97,7 +97,7 @@ def main():
     train_x, train_y, test_x, test_y, val_x, val_y = load_data(train_dir, test_dir)
     train_x, test_x, val_x, tokenizer = data_preprocissing(train_x, test_x, val_x)
 
-    model = build_model_rnn(train_x.shape[1])
+    model = build_model_lstm(train_x.shape[1])
     model.fit(x=train_x, y=train_y, epochs=3, batch_size=128, validation_data=(val_x, val_y))
 
     evaluate(model, test_x, test_y)

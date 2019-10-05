@@ -17,7 +17,7 @@ def make_corpus(input_file, output_file):
             for j in range(0, len(sentence)):
                 if len(sentence[j].strip()) > 30:
 
-                    if num < 10000:
+                    if num < 100000:
                         last_sentence = sentence[j].strip()
                         print(last_sentence)
                         txt_file.write(last_sentence + "\n")
